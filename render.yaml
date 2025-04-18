@@ -1,0 +1,7 @@
+
+services:
+  - type: web
+    name: blind-assist-ai
+    env: python
+    buildCommand: ""
+    startCommand: "python app.py"

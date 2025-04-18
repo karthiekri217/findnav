@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blind Assist AI</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="icon" href="/static/icon.png">
+    <meta name="theme-color" content="#317EFB">
+</head>
+<body>
+    <h2>Ask a question and scan your surroundings</h2>
+    <button onclick="startRecording()">🎙️ Speak</button>
+    <p id="question"></p>
+    <video id="video" autoplay width="320" height="240"></video><br>
+    <button onclick="captureAndSend()">🔍 Scan & Analyze</button>
+    <p id="response"></p>
+
+    <script>
+        let question = "";
+
+        function startRecording() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.start();
+            recognition.onresult = function(event) {
+                question = event.results[0][0].transcript;
+                document.getElementById("question").innerText = "You asked: " + question;
+            };
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                document.getElementById("video").srcObject = stream;
+            });
+
+        function captureAndSend() {
+            const video = document.getElementById("video");
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext("2d").drawImage(video, 0, 0);
+            const imageBase64 = canvas.toDataURL("image/jpeg");
+
+            fetch("/analyze", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: imageBase64, question: question })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("response").innerText = data.answer;
+                speak(data.answer);
+            });
+        }
+
+        function speak(text) {
+            const synth = window.speechSynthesis;
+            const utter = new SpeechSynthesisUtterance(text);
+            synth.speak(utter);
+        }
+    </script>
+</body>
+</html>

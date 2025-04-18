@@ -1,0 +1,22 @@
+
+{
+  "name": "Blind Assist AI",
+  "short_name": "BlindAssist",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#317EFB",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
