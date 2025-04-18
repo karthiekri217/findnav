@@ -1,63 +1,85 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Blind Assist AI</title>
-    <link rel="manifest" href="/static/manifest.json">
-    <link rel="icon" href="/static/icon.png">
-    <meta name="theme-color" content="#317EFB">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blind Assist AI</title>
+
+  <!-- PWA Support -->
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" href="/static/icon.png" type="image/png">
+  <meta name="theme-color" content="#317EFB">
 </head>
 <body>
-    <h2>Ask a question and scan your surroundings</h2>
-    <button onclick="startRecording()">🎙️ Speak</button>
-    <p id="question"></p>
-    <video id="video" autoplay width="320" height="240"></video><br>
-    <button onclick="captureAndSend()">🔍 Scan & Analyze</button>
-    <p id="response"></p>
+  <h2>Ask your question & scan the surroundings</h2>
 
-    <script>
-        let question = "";
+  <button onclick="startRecording()">🎙️ Speak</button>
+  <p id="question"></p>
 
-        function startRecording() {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'en-US';
-            recognition.start();
-            recognition.onresult = function(event) {
-                question = event.results[0][0].transcript;
-                document.getElementById("question").innerText = "You asked: " + question;
-            };
-        }
+  <video id="video" autoplay width="320" height="240" playsinline></video><br>
+  <button onclick="captureAndSend()">🔍 Scan & Analyze</button>
+  <p id="response"></p>
 
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then((stream) => {
-                document.getElementById("video").srcObject = stream;
-            });
+  <script>
+    let question = "";
 
-        function captureAndSend() {
-            const video = document.getElementById("video");
-            const canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext("2d").drawImage(video, 0, 0);
-            const imageBase64 = canvas.toDataURL("image/jpeg");
+    function startRecording() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.start();
+      recognition.onresult = function(event) {
+        question = event.results[0][0].transcript;
+        document.getElementById("question").innerText = "You asked: " + question;
+      };
+    }
 
-            fetch("/analyze", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ image: imageBase64, question: question })
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById("response").innerText = data.answer;
-                speak(data.answer);
-            });
-        }
+    // ✅ Use back camera on mobile
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: "environment" } },
+      audio: false
+    })
+    .then((stream) => {
+      document.getElementById("video").srcObject = stream;
+    })
+    .catch((err) => {
+      console.error("Camera access error:", err);
+      alert("Could not access the back camera.");
+    });
 
-        function speak(text) {
-            const synth = window.speechSynthesis;
-            const utter = new SpeechSynthesisUtterance(text);
-            synth.speak(utter);
-        }
-    </script>
+    function captureAndSend() {
+      const video = document.getElementById("video");
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      const imageBase64 = canvas.toDataURL("image/jpeg");
+
+      fetch("/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: imageBase64, question: question })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("response").innerText = data.answer;
+        speak(data.answer);
+      });
+    }
+
+    function speak(text) {
+      const synth = window.speechSynthesis;
+      const utter = new SpeechSynthesisUtterance(text);
+      synth.speak(utter);
+    }
+
+    // ✅ PWA: register service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/service-worker.js')
+          .then(reg => console.log("Service Worker registered", reg))
+          .catch(err => console.log("Service Worker error:", err));
+      });
+    }
+  </script>
 </body>
 </html>
