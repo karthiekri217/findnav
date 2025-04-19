@@ -64,17 +64,52 @@
 
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  // Start speaking instructions
   function speak(text) {
     const synth = window.speechSynthesis;
     const utter = new SpeechSynthesisUtterance(text);
     synth.speak(utter);
   }
 
-  // Access the correct camera
+  // Ask user if they want to detect again
+  function askToRepeat() {
+    const repeatUtter = new SpeechSynthesisUtterance("Do you want to detect another currency?");
+    repeatUtter.onend = () => {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const userResponse = event.results[0][0].transcript.toLowerCase();
+        console.log("User said:", userResponse);
+
+        if (userResponse.includes("yes")) {
+          speak("Okay, restarting detection.");
+          startCountdown();
+        } else {
+          speak("Thank you. Redirecting to home.");
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 2000);
+        }
+      };
+
+      recognition.onerror = function(event) {
+        console.error("Speech recognition error:", event.error);
+        speak("Could not understand. Redirecting to home.");
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 3000);
+      };
+    };
+    speechSynthesis.speak(repeatUtter);
+  }
+
   navigator.mediaDevices.getUserMedia({
     video: isMobile ? { facingMode: { exact: "environment" } } : true,
-    audio: false
+    audio: true // Enable mic for voice commands
   })
   .then(stream => {
     videoElement.srcObject = stream;
@@ -86,7 +121,6 @@
     alert("Could not access the camera.");
   });
 
-  // Countdown logic
   function startCountdown() {
     let count = 5;
     countdownElement.textContent = "Capturing in " + count + "...";
@@ -97,12 +131,11 @@
       } else {
         clearInterval(timer);
         countdownElement.textContent = "Capturing image...";
-        detectCurrency(); // auto trigger detection
+        detectCurrency();
       }
     }, 1000);
   }
 
-  // Auto currency detection
   function detectCurrency() {
     const canvas = document.createElement("canvas");
     canvas.width = videoElement.videoWidth;
@@ -117,8 +150,14 @@
     })
     .then(res => res.json())
     .then(data => {
-      currencyResponse.textContent = data.answer;
-      speak(data.answer);
+      if (data.answer) {
+        currencyResponse.textContent = data.answer;
+        speak(data.answer);
+        setTimeout(askToRepeat, 3000);
+      } else {
+        currencyResponse.textContent = "No answer received.";
+        speak("Unable to detect currency.");
+      }
     })
     .catch(err => {
       currencyResponse.textContent = "Error during detection.";
