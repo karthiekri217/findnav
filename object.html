@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Object Detection</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Custom animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+    <!-- Header -->
+    <header class="text-center mb-6 fade-in">
+        <h1 class="text-4xl font-bold text-blue-600 mb-2">Real-Time Object Detection</h1>
+        <p class="text-gray-600">Detect objects instantly using your webcam</p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="bg-white shadow-2xl rounded-xl p-6 max-w-4xl w-full space-y-6 fade-in">
+        <!-- Video Feed -->
+        <div class="relative flex justify-center rounded-lg overflow-hidden shadow-lg mb-4">
+            <video id="video" autoplay muted playsinline
+                class="w-full h-auto rounded-lg border-4 border-blue-500 pulse"></video>
+        </div>
+
+        <!-- Detected Objects Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 slide-up">
+            <!-- Detected Objects List -->
+            <div class="bg-gray-50 p-4 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-3 flex items-center text-green-600">
+                    <i class="bi bi-bullseye text-green-500 mr-2"></i> Detected Objects
+                </h2>
+                <ul id="object-list" class="space-y-2 text-gray-700"></ul>
+            </div>
+
+            <!-- Detection Status -->
+            <div class="bg-gray-50 p-4 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-3 flex items-center text-blue-600">
+                    <i class="bi bi-info-circle text-blue-500 mr-2"></i> Status
+                </h2>
+                <p id="result" class="text-gray-700">Initializing...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-8 text-center text-gray-500 text-sm fade-in">
+        <p>&copy; 2025 Object Detection App</p>
+    </footer>
+
+    <!-- TensorFlow and COCO-SSD -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <!-- App Script -->
+    <script src="app.js"></script>
+</body>
+
+</html>

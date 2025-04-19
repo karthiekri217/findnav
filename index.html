@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Command Navigation</title>
+  <!-- Bootstrap and Tailwind CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { background-color: #f8fafc; }
+    .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+    @keyframes fadeIn { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
+    .command-card {
+      background-color: #fff;
+      border: 1px solid #e2e8f0;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .command-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .listen-btn {
+      background-color: #1d4ed8;
+      border: none;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .listen-btn:hover {
+      background-color: #1e3a8a;
+      transform: scale(1.05);
+    }
+    .listen-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.4);
+    }
+    .custom-popup {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #38a169;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+      z-index: 1000;
+    }
+    .logout-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #dc2626;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .logout-btn:hover {
+      background-color: #b91c1c;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center relative">
+  <!-- Logout Button in Header -->
+  <button class="logout-btn" onclick="logoutUser()">Logout</button>
+  
+  <div class="container mx-auto p-6 text-center animate-fade-in max-w-3xl">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold text-blue-700 mb-2">Voice Command Navigation</h1>
+      <p class="text-gray-600">Use voice commands for seamless navigation and detection.</p>
+    </header>
+
+    <main>
+      <section class="instructions mb-10">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-6">Available Commands</h2>
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="commandsContainer">
+          <!-- Commands will be dynamically generated here -->
+        </div>
+        <button class="listen-btn mt-8 px-8 py-3 text-white rounded-lg shadow-md hover:shadow-lg transition-transform transform hover:scale-105" onclick="startListening()">
+          <i class="fas fa-microphone mr-2"></i> Start Listening
+        </button>
+      </section>
+    </main>
+  </div>
+
+  <!-- Include Firebase and Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZMVmPZMwqSZo4Sa5yD2fWOOHCkEndctc",
+      authDomain: "blind-stick-b04e0.firebaseapp.com",
+      projectId: "blind-stick-b04e0",
+      storageBucket: "blind-stick-b04e0.firebasestorage.app",
+      messagingSenderId: "240768410871",
+      appId: "1:240768410871:web:02a1e5349b0499157d1ff2",
+      measurementId: "G-BHDH10QF5L"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Function to show popup notifications
+    function showPopup(message) {
+      const popup = document.createElement('div');
+      popup.className = 'custom-popup';
+      popup.textContent = message;
+      document.body.appendChild(popup);
+      setTimeout(() => { popup.remove(); }, 3000);
+    }
+
+    // Logout function: Sign out the user and redirect to login page
+    function logoutUser() {
+      auth.signOut()
+        .then(() => {
+          showPopup("Logout successful!");
+          window.location.href = "login.html";
+        })
+        .catch(error => {
+          showPopup("Error logging out: " + error.message);
+        });
+    }
+
+    // Retrieve user data and display commands
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        // Retrieve user data from Firestore
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        const userData = userDoc.data();
+        const selectedFeatures = userData.selectedFeatures || [];
+        
+        // Show popup with preferred options and speak the message aloud
+        if (selectedFeatures.length > 0) {
+          const popupMsg = "Your preferred options are: " + selectedFeatures.join(", ");
+          showPopup(popupMsg);
+          
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(popupMsg);
+            utterance.lang = "en-US";
+            speechSynthesis.speak(utterance);
+          }
+        }
+
+        // Map features to command card details
+        const featureCommands = {
+          'object-detection': { icon: 'fas fa-camera', text: 'Say "Object Detection"', redirect: 'object.html' },
+          'object-description': { icon: 'fas fa-search', text: 'Say "Describe Object"', redirect: 'describe.html' },
+          'indoor-navigation': { icon: 'fas fa-map-signs', text: 'Say "Indoor Navigation"', redirect: 'indoormap.html' },
+          'outdoor-navigation': { icon: 'fas fa-road', text: 'Say "Outdoor Navigation"', redirect: 'map.html' },
+          'currency-detection': { icon: 'fas fa-money-bill-wave', text: 'Say "Currency Detection"', redirect: 'money.html' }
+        };
+
+        const commandsContainer = document.getElementById('commandsContainer');
+        commandsContainer.innerHTML = '';
+
+        selectedFeatures.forEach(feature => {
+          const command = featureCommands[feature];
+          if (command) {
+            const card = document.createElement('div');
+            card.className = "command-card p-4 rounded-lg shadow-sm cursor-pointer";
+            card.innerHTML = `<i class="${command.icon} text-blue-500 text-3xl mb-2"></i>
+                              <p class="text-gray-700">${command.text}</p>`;
+            card.addEventListener('click', () => {
+              window.location.href = command.redirect;
+            });
+            commandsContainer.appendChild(card);
+          }
+        });
+      }
+    });
+
+    // Voice command functionality
+    function startListening() {
+      if ('webkitSpeechRecognition' in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.onresult = function (event) {
+          const command = event.results[0][0].transcript.toLowerCase();
+          console.log("Command received: " + command);
+          if (command.includes("object detection")) {
+            window.location.href = "object.html";
+          } else if (command.includes("outdoor navigation")) {
+            window.location.href = "map.html";
+          } else if (command.includes("indoor navigation")) {
+            window.location.href = "https://leonallr10.github.io/IndoorNAV/";
+          } else if (command.includes("describe object")) {
+            window.location.href = "describe.html";
+          } else if (command.includes("currency detection")) {
+            window.location.href = "money.html";
+          } else {
+            showPopup("Command not recognized. Please try again!");
+          }
+        };
+        recognition.onerror = function (event) {
+          showPopup("Error occurred: " + event.error);
+        };
+        recognition.start();
+      } else {
+        showPopup("Speech recognition is not supported in this browser.");
+      }
+    }
+  </script>
+</body>
+</html>
