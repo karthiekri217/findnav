@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, render_template
+from flask import send_file
 from flask_cors import CORS
 from PIL import Image
 import base64
@@ -16,7 +17,7 @@ model = genai.GenerativeModel(model_name="gemini-1.5-pro")
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return send_file("index.html")
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
