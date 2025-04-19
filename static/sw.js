@@ -6,11 +6,11 @@ self.addEventListener('install', (event) => {
             return cache.addAll([
                 './',
                 './index.html',
-                './styles.css',
-                './app.js',
-                './manifest.json',
-                './icon-192.png',
-                './icon-512.png'
+                '/static/styles.css',
+                '/static/app.js',
+                '/static/manifest.json',
+                '/static/icon-192.png',
+                '/static/icon-512.png'
             ]);
         })
     );
