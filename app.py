@@ -17,7 +17,7 @@ model = genai.GenerativeModel(model_name="gemini-1.5-pro")
 
 @app.route("/")
 def home():
-    return send_file("index.html")
+    return send_file("login.html")
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
