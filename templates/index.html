@@ -64,6 +64,14 @@
       transform: scale(1.05);
     }
   </style>
+
+    <link rel="manifest" href="/static/manifest.json" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/service-worker.js');
+      }
+    </script>
+
 </head>
 <body class="min-h-screen flex items-center justify-center relative">
   <!-- Logout Button in Header -->
