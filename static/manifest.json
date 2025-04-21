@@ -1,6 +1,6 @@
 {
-  "name": "FindNav",
-  "short_name": "FindNav",
+  "name": "blind navigator",
+  "short_name": "blind navigator",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
