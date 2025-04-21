@@ -64,7 +64,16 @@
         ctx.lineTo(180, 80);
         ctx.moveTo(200, 50);
         ctx.lineTo(220, 80);
-      } else {
+      } 
+      
+      if (direction === "left") {
+        ctx.moveTo(300, 150);
+        ctx.lineTo(100, 150);
+        ctx.lineTo(130, 130);
+        ctx.moveTo(100, 150);
+        ctx.lineTo(130, 170);
+      }
+      else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
       ctx.stroke();
@@ -114,7 +123,7 @@
             drawArrow("straight");
             speak("Now walk straight for 5 meter", () => {
               setTimeout(() => {
-                drawArrow("right");
+                drawArrow("left");
                 speak("Take a left", () => {
                   setTimeout(() => {
                     drawArrow(""); // clear arrow
